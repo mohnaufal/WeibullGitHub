@@ -58,7 +58,8 @@
 			<form role="form" method="post" enctype= "multipart/form-data" action= "/process">
 				
 				<div class="form-group">
-					 <label for="exampleInputFile">File input</label><input type="file" name= "upload" id="exampleInputFile">
+					 <label for="exampleInputFile">File input</label><input
+					 type="file" name= "inputfile" id="exampleInputFile">
 					<p class="help-block">
 						Example block-level help text here.
 					</p>

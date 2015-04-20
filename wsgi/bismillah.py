@@ -15,10 +15,8 @@ from matplotlib.ticker import LogLocator
 
 from bottle import Bottle, run, response, static_file, request, route, template
 
-r_value = 0
 app = Bottle()
-output1 = io.BytesIO()
-output2 = io.BytesIO()
+
 # Generate ticks
 def weibull_CDF(y, pos):
     return "%G %%" % (100*(1-np.exp(-np.exp(y))))
@@ -28,8 +26,10 @@ x_locator = LogLocator(2)
 
 import scipy.stats as stats # scipy is a statistical package for Python
 # Use Scipy's stats package to perform least-squares fit
-def plot_linreg1(x,y):
-    global output1
+def plot_linreg1(x,y, output):
+    """
+    return shape, slope, r_value
+    """
     # y = slope * x + intercept
     slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
     #line = slope*x+intercept
@@ -38,27 +38,28 @@ def plot_linreg1(x,y):
     yt_lnF = np.log(-np.log(1-yt_F))
     xt_F = np.power(10, np.arange(8))
     xt_lnF = np.log(xt_F)
-    fig = plt.figure()    
-    fig,ax = plt.subplots()
+    fig = plt.figure()
+    fig, ax = plt.subplots()
     plt.yticks(yt_lnF)
     plt.xticks(xt_lnF)
     ax.yaxis.set_major_formatter(y_formatter)
     ax.xaxis.set_major_formatter(x_formatter)
     #ax.xaxis.set_major_locator(x_locator)
     plt.xlim(1)
-    plt.scatter(x,y)
+    plt.scatter(x, y)
     #plt.plot(x,line)
     plt.title("Weibull Cumulative Distribution Function", weight='bold')
     plt.grid()
-    fig.savefig(output1,format="jpeg");
-    output1.seek(0)
+    fig.savefig(output,format="jpeg");
+    output.seek(0)
     print("R^2: {}".format(r_value**2))
     print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
-    return slope, np.exp(-intercept/slope)
+    return slope, np.exp(-intercept/slope), r_value
 
-def plot_linreg2(x,y):
-    global output2
-    global r_value
+def plot_linreg2(x,y, output):
+    """
+    return shape, slope, r_value
+    """
     # y = slope * x + intercept
     slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
     line = slope*x+intercept
@@ -67,24 +68,24 @@ def plot_linreg2(x,y):
     yt_lnF = np.log(-np.log(1-yt_F))
     xt_F = np.power(10, np.arange(8))
     xt_lnF = np.log(xt_F)
-    fig = plt.figure()    
-    fig,ax = plt.subplots()
+    fig = plt.figure()
+    fig, ax = plt.subplots()
     plt.yticks(yt_lnF)
     plt.xticks(xt_lnF)
     ax.yaxis.set_major_formatter(y_formatter)
     ax.xaxis.set_major_formatter(x_formatter)
     #ax.xaxis.set_major_locator(x_locator)
     plt.xlim(1)
-    plt.scatter(x,y)
-    plt.plot(x,line)
+    plt.scatter(x, y)
+    plt.plot(x, line)
     plt.title("Weibull Cumulative Distribution Function\nLinear Regression - Least Squares Method", weight='bold')
     #plt.title("Linear Regression - Least Squares Method", weight='bold')
     plt.grid()
-    fig.savefig(output2,format="jpeg");
-    output2.seek(0)
+    fig.savefig(output,format="jpeg");
+    output.seek(0)
     print("R^2: {}".format(r_value**2))
     print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
-    return slope, np.exp(-intercept/slope)
+    return slope, np.exp(-intercept/slope), r_value
     
 def reliability(t, loc, scale, shape):
     return (np.exp(-((t - loc)/scale)**shape))
@@ -116,21 +117,23 @@ def weibull_scale_transform(data):
 @route("/process", method='POST')    
 def process():
     #tfail = np.array ([101, 172, 184, 274, 378, 704, 1423, 2213, 2965, 5208, 5879, 6336, 6428, 6630, 7563, 10435, 30138, 30580, 38265, 47413, 81607, 158007, 182958])
-    data = request.files.upload
-    dataString = data.file.read().decode("utf-8")
-    dataArray = dataString.split("\n")
-    tfail = np.array([float(i) for i in dataArray])
     #tfail = np.loadtxt("Fail_data.csv")
+    tfail = np.loadtxt(request.files.inputfile.file)
     x1, y1 = weibull_scale_transform(tfail)
     t0 = t0_hat(tfail)
     x2, y2 = weibull_scale_transform(tfail - t0)
-    shape1, scale1 = plot_linreg1(x1,y1)
+
+    output1 = io.BytesIO()
+    output2 = io.BytesIO()
+
+    shape1, scale1, r_value1 = plot_linreg1(x1,y1, output1)
     print ("Reliability: {}".format (reliability(tfail, 0, scale1, shape1)))
-    shape2, scale2 = plot_linreg2(x2,y2)
+    shape2, scale2, r_value2 = plot_linreg2(x2,y2, output2)
     r = reliability(tfail, t0, scale2, shape2)
     print ("Location:{}".format(t0))  
     print ("Reliability: {}".format (reliability(tfail, t0, scale2, shape2)))
     print ("Reliable Life: {}".format (reliable_life(r,t0, scale2, shape2)))
+
     html = """<html><body> 
     <img src="data:image/png;base64,{0}"/> 
     <img src="data:image/png;base64,{1}"/>
@@ -145,7 +148,14 @@ def process():
     <div style='float:left;border-style:solid'>
         Reliable Life <br> {7} 
     </div>
-    </body></html>""".format(base64.encodebytes(output1.getvalue()).decode(), base64.encodebytes(output2.getvalue()).decode(), (r_value**2), scale2, shape2, t0, "<br>".join(map(str, reliability(tfail, t0, scale2, shape2))), "<br>".join(map(str, reliable_life(r,t0, scale2, shape2))))
+    </body></html>""".format(base64.encodebytes(output1.getvalue()).decode(),
+            base64.encodebytes(output2.getvalue()).decode(),
+            (r_value2**2),
+            scale2,
+            shape2,
+            t0,
+            "<br>".join(map(str, reliability(tfail, t0, scale2, shape2))),
+            "<br>".join(map(str, reliable_life(r,t0, scale2, shape2))))
     plt.close()
     return html
     
@@ -165,5 +175,4 @@ TEMPLATE_PATH.append(os.path.join(os.environ['OPENSHIFT_REPO_DIR'], 'wsgi/views/
 #test_calc()
 run(host ='localhost', port=8080, debug=True)
 '''
-
-    
+run(host ='localhost', port=8080, debug=True)
