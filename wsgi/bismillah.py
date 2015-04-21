@@ -126,8 +126,8 @@ def process():
     </body></html>""".format(base64.encodebytes(output1.getvalue()).decode(),
             base64.encodebytes(output2.getvalue()).decode(),
             (r_value2**2),
-            scale2,
             shape2,
+            scale2,
             t0)
     plt.close()
     return html
