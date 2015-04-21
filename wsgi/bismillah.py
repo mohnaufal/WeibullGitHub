@@ -118,6 +118,11 @@ def process():
     Shape Parameter = {3} <br>
     Scale Parameter = {4} <br>
     Location Parameter = {5} <br>
+    <form action="/process", method='post'>
+        Reliability: <input name="reliability" type='text' />
+        Reliable Life: <input name="reliable life" type='text' />
+        <input value="Hitung" type='submit' />
+    </form>
     </body></html>""".format(base64.encodebytes(output1.getvalue()).decode(),
             base64.encodebytes(output2.getvalue()).decode(),
             (r_value2**2),
