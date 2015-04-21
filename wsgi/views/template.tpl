@@ -88,23 +88,8 @@
 
 				</div>
 				<button type="submit" class="btn btn-default">Hitung</button>
-			</form>
-
-			 <p class="help-block">
-				Pilih salah satu data yang hendak diketahui dan masukkan parameter lainnya dibawah ini 
-			</p>
-
-			<div class="form-group">
-				 <label for="exampleInputReliability">Reliability</label><input class="form-control" id="exampleInputReliable" >
-				 <p class="help-block">
-					Atau
-				</p>
-			</div>
-			<div class="form-group">
-				 <label for="exampleInputReliableLife">Reliable Life</label><input class="form-control" id="exampleInputReliableLife">				
-			</div>
-			</form>
-			<button type="submit" class="btn btn-default">Hitung</button>
+			</form>	
+	
 		</div>
 	</div>
 </div>
