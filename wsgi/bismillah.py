@@ -55,8 +55,8 @@ def plot_linreg(x,y, output, draw_line=False):
     plt.grid()
     fig.savefig(output,format="jpeg");
     output.seek(0)
-    print("R^2: {}".format(r_value**2))
-    print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
+    #print("R^2: {}".format(r_value**2))
+    #print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
     return slope, np.exp(-intercept/slope), r_value
 
 def reliability(t, loc, scale, shape):
@@ -86,8 +86,23 @@ def weibull_scale_transform(data):
     y = np.log(-np.log(1 - median_rank(len(data))))
     return x, y
 
-@route("/process", method='POST')
-def process():
+@route("/relia", method="POST")
+def relia():
+    shape= float(request.forms.get('shape'))
+    scale= float(request.forms.get('scale'))
+    t0= float(request.forms.get('loc'))
+    if request.query.inv == "1":
+        r = float(request.forms.get("reliability"))
+        content = "{}".format(reliable_life(r, t0, scale, shape))
+    else:
+        tfail = float(request.forms.get("tfail"))
+        content = "{}".format(reliability(tfail, t0, scale, shape))
+
+    
+    return content
+
+@route("/fitting", method='POST')
+def fitting():
     #tfail = np.loadtxt("Fail_data.csv")
     if request.query.upload == "1":
         input_data = request.files.inputfile.file
@@ -118,11 +133,22 @@ def process():
     Shape Parameter = {3} <br>
     Scale Parameter = {4} <br>
     Location Parameter = {5} <br>
-    </body></html>""".format(base64.encodebytes(output1.getvalue()).decode(),
+    
+        Reliability: <input id ="reliability" name="reliability" type='text' />
+        <input value="Hitung Reliable Life" id= "hitung_reliablelife" type='submit' />
+        <input id="shape" name="shape" value="{3}" type='hidden' />
+        <input  id="scale" name="scale" value="{4}" type='hidden' />
+        <input  id="loc" name="loc" value="{5}" type='hidden' />
+        Reliable Life: <input  id="tfail" name="tfail" type='text' />
+        <input value="Hitung Reliability" type='submit' id="hitung_reliability" />
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/scripts.js"></script>
+    </body>
+    </html>""".format(base64.encodebytes(output1.getvalue()).decode(),
             base64.encodebytes(output2.getvalue()).decode(),
             (r_value2**2),
-            scale2,
             shape2,
+            scale2,
             t0)
     plt.close()
     return html
@@ -137,4 +163,4 @@ def static(path):
     return static_file(path, root='static')
 
 #test_calc()
-run(host ='localhost', port=8080, debug=True)
+run(host ='localhost', port=8080, debug=False)
