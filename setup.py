@@ -5,5 +5,5 @@ setup(name='Weibullparamest',
       description='OpenShift App',
       author='Naufal',
       author_email='mnaufal92@gmail.com',
-      install_requires=['bottle', 'numpy', 'matplotlib', 'scipy', 'pillow'],
+      install_requires=['bottle', 'numpy', 'matplotlib', 'scipy'],
      )
