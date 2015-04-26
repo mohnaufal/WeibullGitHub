@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import LogLocator
 
-from bottle import Bottle, run, response, static_file, request, route, template
+from bottle import Bottle, run, response, static_file, request, route, template, default_app
 
 app = Bottle()
 
@@ -162,5 +162,11 @@ def index():
 def static(path):
     return static_file(path, root='static')
 
+import os
+from bottle import TEMPLATE_PATH
+TEMPLATE_PATH.append(os.path.join(os.environ['OPENSHIFT_REPO_DIR'], 'wsgi/views/')) 
+
+application=default_app()
+
 #test_calc()
-run(host ='localhost', port=8080, debug=False)
+#run(host ='localhost', port=8080, debug=False)
