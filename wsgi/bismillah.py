@@ -53,7 +53,7 @@ def plot_linreg(x,y, output, draw_line=False):
     else:
         plt.title("Weibull Cumulative Distribution Function", weight='bold')
     plt.grid()
-    fig.savefig(output,format="jpeg");
+    fig.savefig(output,format="png");
     output.seek(0)
     #print("R^2: {}".format(r_value**2))
     #print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
