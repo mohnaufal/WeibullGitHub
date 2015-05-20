@@ -20,12 +20,40 @@ app = Bottle()
 # Generate ticks
 def weibull_CDF(y, pos):
     return "%G %%" % (100*(1-np.exp(-np.exp(y))))
+
+def percent_print(y, pos):
+    return "%G %%" % (100*y)
+
 y_formatter = FuncFormatter(weibull_CDF)
+y_formatter2 = FuncFormatter(percent_print)
 x_formatter = FuncFormatter(lambda x, pos: np.exp(x))
 x_locator = LogLocator(2)
 
 import scipy.stats as stats # scipy is a statistical package for Python
 # Use Scipy's stats package to perform least-squares fit
+
+def plot_pdf(t, loc, scale, shape, output):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    #ax.yaxis.set_major_formatter(y_formatter2)
+    #ax.yaxis.set_major_formatter(x_formatter)
+    
+    y = weib_pdf(t, loc, scale, shape)
+    ax.scatter(t, y)
+
+    xt_F = np.logspace(np.ceil(np.log10(loc)), np.ceil(np.log10(t.max())), 100)
+    yt_F = weib_pdf(xt_F, loc, scale, shape)
+    ax.set_xscale('log')
+    ax.set_xlim([1, xt_F.max()])
+    ax.set_ylim([0, yt_F.max()])
+    ax.plot(xt_F, yt_F)
+    
+    plt.grid()
+    ax.set_title("Weibull Probability Distribution Function", weight='bold')
+    fig.savefig(output, format="png");
+    output.seek(0)
+
+
 def plot_linreg(x,y, output, draw_line=False):
     """
     return shape, slope, r_value
@@ -38,26 +66,30 @@ def plot_linreg(x,y, output, draw_line=False):
     xt_F = np.power(10, np.arange(8))
     xt_lnF = np.log(xt_F)
     fig = plt.figure()
-    fig, ax = plt.subplots()
-    plt.yticks(yt_lnF)
-    plt.xticks(xt_lnF)
+    ax = fig.add_subplot(111)
+
+    ax.set_yticks(yt_lnF)
+    ax.set_xticks(xt_lnF)
     ax.yaxis.set_major_formatter(y_formatter)
     ax.xaxis.set_major_formatter(x_formatter)
     #ax.xaxis.set_major_locator(x_locator)
     plt.xlim(1)
-    plt.scatter(x, y)
+    ax.scatter(x, y)
     if draw_line:
         line = slope*x+intercept
-        plt.plot(x, line)
-        plt.title("Weibull Cumulative Distribution Function\nLinear Regression - Least Squares Method", weight='bold')
+        ax.plot(x, line)
+        ax.set_title("Weibull Cumulative Distribution Function\nLinear Regression - Least Squares Method", weight='bold')
     else:
-        plt.title("Weibull Cumulative Distribution Function", weight='bold')
+        ax.set_title("Weibull Cumulative Distribution Function", weight='bold')
     plt.grid()
     fig.savefig(output,format="png");
     output.seek(0)
     #print("R^2: {}".format(r_value**2))
     #print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
     return slope, np.exp(-intercept/slope), r_value
+
+def weib_pdf(t, loc, scale, shape):
+    return (shape/scale)*(((t-loc)/scale)**(shape-1))*((np.exp(-((t-loc)/scale)))**shape)
 
 def reliability(t, loc, scale, shape):
     return (np.exp(-((t - loc)/scale)**shape))
@@ -116,31 +148,45 @@ def fitting():
 
     output1 = io.BytesIO()
     output2 = io.BytesIO()
+    output3 = io.BytesIO()
 
     shape1, scale1, r_value1 = plot_linreg(x1,y1, output1)
     #print ("Reliability: {}".format (reliability(tfail, 0, scale1, shape1)))
     shape2, scale2, r_value2 = plot_linreg(x2,y2, output2, draw_line=True)
+    plot_pdf(tfail, t0, scale2, shape2, output3)
     r = reliability(tfail, t0, scale2, shape2)
     #print ("Location:{}".format(t0))
     #print ("Reliability: {}".format (reliability(tfail, t0, scale2, shape2)))
     #print ("Reliable Life: {}".format (reliable_life(r,t0, scale2, shape2)))
 
     html = """<html><body>
-    <img src="data:image/png;base64,{0}"/>
-    <img src="data:image/png;base64,{1}"/>
-    <br>
-    R^2 = {2} <br>
-    Shape Parameter = {3} <br>
-    Scale Parameter = {4} <br>
-    Location Parameter = {5} <br>
+        
+    <table border="0">
+        <tr>
+            <td width="57%">
+                <img src="data:image/png;base64,{0}"/>
+
+                <img src="data:image/png;base64,{6}"/>
+            </td>
+            <td valign="top" width="43%">
+                R^2 = {2} <br>
+                Shape Parameter = {3} <br>
+                Scale Parameter = {4} <br>
+                Location Parameter = {5} <br>
+                
+                Reliability: <input id ="reliability" name="reliability" type='text' />
+                <input value="Hitung Reliable Life" id= "hitung_reliablelife" type='submit' />
+                <input id="shape" name="shape" value="{3}" type='hidden' />
+                <input  id="scale" name="scale" value="{4}" type='hidden' />
+                <input  id="loc" name="loc" value="{5}" type='hidden' />
+                <br>
+                Reliable Life: <input  id="tfail" name="tfail" type='text' />
+                <input value="Hitung Reliability" type='submit' id="hitung_reliability" />
+            </td>
+        </tr>
+    </table>
     
-        Reliability: <input id ="reliability" name="reliability" type='text' />
-        <input value="Hitung Reliable Life" id= "hitung_reliablelife" type='submit' />
-        <input id="shape" name="shape" value="{3}" type='hidden' />
-        <input  id="scale" name="scale" value="{4}" type='hidden' />
-        <input  id="loc" name="loc" value="{5}" type='hidden' />
-        Reliable Life: <input  id="tfail" name="tfail" type='text' />
-        <input value="Hitung Reliability" type='submit' id="hitung_reliability" />
+     
     <script type="text/javascript" src="/static/js/jquery.min.js"></script>
     <script type="text/javascript" src="/static/js/scripts.js"></script>
     </body>
@@ -149,7 +195,8 @@ def fitting():
             (r_value2**2),
             shape2,
             scale2,
-            t0)
+            t0
+            base64.encodebytes(output3.getvalue()).decode()))
     plt.close()
     return html
 
