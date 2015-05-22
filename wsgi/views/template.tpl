@@ -32,8 +32,8 @@
 	<script type="text/javascript" src="/static/js/scripts.js"></script>
 </head>
 
-<body>
-<div class="container">
+<body style="background:#ddd">
+<div class="container" style="background:#fff">
 	<div class="row clearfix">
 		<div class="col-md-12 column">
 			<h3 class="text-center" style="background:#0ae">
@@ -57,12 +57,24 @@
 				<div class="tab-content">
 					<div class="tab-pane active" id="panel-480560">
 						<p>
-							This web provide a tools for calculating the shape parameter, scale parameter and location parameter from the weibull distribution. <br> Weibull Parameter mainly used for many purposes such as determine the maintenance program etc. <br> This web also provide reliability to reliable life converter and vice versa. <br>Good Luck
+							<br>
+							This web provide a tools for calculating the shape parameter, scale parameter and location parameter from the weibull distribution. <br> Weibull Parameter will be used for building four main weibull function, Probability Density Function (PDF), Cumulative Distribution Function (CDF), Failure Rate and Reliability. <br> This web also provide Reliability to Reliable life converter and vice versa. <br>
+							<br>
+							Terms for input data:<br>
+							- Input data should not less than 4  failure data. otherwise this app will not be able to compute the results.<br>
+							- Enter only number for input, if any alphabetical letter this app will not be able to compute the results.<br>
+							- Input data must be sorted from smallest to largest.<br>
+							- For File Input, this application can only read .csv file extension (Comma separated Value). User can convert file which contain failure data in spreadsheet based application such as Microsoft Excel. Failure data should be sorted into a single column.<br>
+							- The method used in this application allows user to input up to 30 failure data. If it exceeds the results will still appear, but will reduce the accuracy of the results. Please use another method to calculate the parameters of the weibull distribution for larger quantities of failure data.
+							<br>
+							<br>
 						</p>
 					</div>
 					<div class="tab-pane" id="panel-841589">
 						<p>
+							<br>
 							This section provide input form for failure data. Enter failure data and press Submit.
+							<br>
 						</p>
 						<form method = "post" enctype="multipart/form-data" action= "/fitting" target ="_blank">
 							<table border ="1">
@@ -80,7 +92,9 @@
 					</div>
 					<div class="tab-pane" id="panel-filinput">
 						<p>
+							<br>
 							This section provide input file in .csv extension which contains failure data.
+							<br>
 						</p>
 						<form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
 
@@ -93,12 +107,35 @@
 					</div>
 					<div class="tab-pane" id="panel-about">
 						<p>
-							This web app only use for academic purpose. <br> If you have any thoughts please kindly share with me. <br> I'll gladly reply all of your thoughts. <br> Mohammad Naufal <br> Aeronautics and Astronautics Engineering <br> Faculty of Mechanical and Aerospace Engineering <br> mnaufal92@gmail.com
-						</p>
+							<br>
+							This web app only use for academic purpose. 
+							<br> 
+							If you have any thoughts please kindly share with me. 
+							<br>
+							 I'll gladly reply all of your thoughts. 
+							<br>
+							<br>
+							Mohammad Naufal 
+							<br>
+							mnaufal92@gmail.com
+							<br> 
+							Aeronautics and Astronautics Engineering 
+							<br> 
+							Faculty of Mechanical and Aerospace Engineering 
+							<br>
+							Bandung Institute of Technology
+							<br>
 					</div>
 				</div>
 				<h5 class="text-center" style="background:#000;color:#fff">
-				<br><br>Copyright 2015<br>Faculty of Mechanical and Aerospace Engineering<br>Bandung Institute of Technology<br><br>
+				<br>
+				<br>
+				weibparest-naufal.rhcloud.com
+				<br>
+				<br>Copyright 2015
+				<br>Faculty of Mechanical and Aerospace Engineering
+				<br>Bandung Institute of Technology
+				<br><br>
 				</h5>
 			</div>
 		</div>

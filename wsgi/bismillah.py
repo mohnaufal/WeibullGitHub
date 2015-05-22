@@ -23,7 +23,7 @@ def weibull_CDF(y, pos):
 
 def percent_print(y, pos):
     return "%G %%" % (100*y)
-
+    
 y_formatter = FuncFormatter(weibull_CDF)
 y_formatter2 = FuncFormatter(percent_print)
 x_formatter = FuncFormatter(lambda x, pos: np.exp(x))
@@ -49,10 +49,10 @@ def plot_pdf(t, loc, scale, shape, output):
     ax.plot(xt_F, yt_F)
     
     plt.grid()
-    ax.set_title("Weibull Probability Distribution Function", weight='bold')
+    ax.set_title("Weibull Probability Density Function", weight='bold')
     fig.savefig(output, format="png");
     output.seek(0)
-
+    
 
 def plot_linreg(x,y, output, draw_line=False):
     """
@@ -67,7 +67,7 @@ def plot_linreg(x,y, output, draw_line=False):
     xt_lnF = np.log(xt_F)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-
+    
     ax.set_yticks(yt_lnF)
     ax.set_xticks(xt_lnF)
     ax.yaxis.set_major_formatter(y_formatter)
@@ -90,7 +90,7 @@ def plot_linreg(x,y, output, draw_line=False):
 
 def weib_pdf(t, loc, scale, shape):
     return (shape/scale)*(((t-loc)/scale)**(shape-1))*((np.exp(-((t-loc)/scale)))**shape)
-
+    
 def reliability(t, loc, scale, shape):
     return (np.exp(-((t - loc)/scale)**shape))
 
@@ -149,7 +149,7 @@ def fitting():
     output1 = io.BytesIO()
     output2 = io.BytesIO()
     output3 = io.BytesIO()
-
+    
     shape1, scale1, r_value1 = plot_linreg(x1,y1, output1)
     #print ("Reliability: {}".format (reliability(tfail, 0, scale1, shape1)))
     shape2, scale2, r_value2 = plot_linreg(x2,y2, output2, draw_line=True)
@@ -165,7 +165,7 @@ def fitting():
         <tr>
             <td width="57%">
                 <img src="data:image/png;base64,{0}"/>
-
+                
                 <img src="data:image/png;base64,{6}"/>
             </td>
             <td valign="top" width="43%">
@@ -195,8 +195,8 @@ def fitting():
             (r_value2**2),
             shape2,
             scale2,
-            t0
-            base64.encodebytes(output3.getvalue()).decode()))
+            t0,
+            base64.encodebytes(output3.getvalue()).decode())
     plt.close()
     return html
 
