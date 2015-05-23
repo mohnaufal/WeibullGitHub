@@ -46,6 +46,8 @@ def plot_pdf(t, loc, scale, shape, output):
     ax.set_xscale('log')
     ax.set_xlim([1, xt_F.max()])
     ax.set_ylim([0, yt_F.max()])
+    ax.set_xlabel('Age (T), log scale')
+    ax.set_ylabel('Weibull PDF')
     ax.plot(xt_F, yt_F)
     
     plt.grid()
@@ -73,6 +75,8 @@ def plot_linreg(x,y, output, draw_line=False):
     ax.yaxis.set_major_formatter(y_formatter)
     ax.xaxis.set_major_formatter(x_formatter)
     #ax.xaxis.set_major_locator(x_locator)
+    ax.set_xlabel('Age (T), log scale')
+    ax.set_ylabel('Median Rank, % scale')
     plt.xlim(1)
     ax.scatter(x, y)
     if draw_line:

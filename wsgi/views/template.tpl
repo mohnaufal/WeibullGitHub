@@ -58,13 +58,26 @@
 					<div class="tab-pane active" id="panel-480560">
 						<p>
 							<br>
-							This web provide a tools for calculating the shape parameter, scale parameter and location parameter from the weibull distribution. <br> Weibull Parameter will be used for building four main weibull function, Probability Density Function (PDF), Cumulative Distribution Function (CDF), Failure Rate and Reliability. <br> This web also provide Reliability to Reliable life converter and vice versa. <br>
+							This web provides an application for calculating the shape parameter, scale parameter and location parameter from the weibull distribution. <br> Weibull Parameter will be used for building four main weibull function, Probability Density Function (PDF), Cumulative Distribution Function (CDF), Failure Rate and Reliability. <br> This web also provide Reliability to Reliable life converter and vice versa. <br>
+							For further reading, please click one of the references below<br>
+							<a href="http://en.wikipedia.org/wiki/Weibull_distribution"> 
+							  Weibull Distribution on Wikipedia
+							</a>
+							<br>
+							<a href="http://reliawiki.org/index.php/The_Weibull_Distribution"> 
+							  Weibull Distribution on Reliawiki.org 
+							</a>
+							<br>
 							<br>
 							Terms for input data:<br>
-							- Input data should not less than 4  failure data. otherwise this app will not be able to compute the results.<br>
+							- Input data should not be less than 4  failure data. otherwise this app will not be able to compute the results.<br>
 							- Enter only number for input, if any alphabetical letter this app will not be able to compute the results.<br>
 							- Input data must be sorted from smallest to largest.<br>
-							- For File Input, this application can only read .csv file extension (Comma separated Value). User can convert file which contain failure data in spreadsheet based application such as Microsoft Excel. Failure data should be sorted into a single column.<br>
+							- For File Input, this application can only read .csv file extension (Comma separated Value). User can convert file which contain failure data in spreadsheet based application such as Microsoft Excel. Failure data should be sorted into a single column. You can download example csv files
+							<a href="/static/example.csv">
+								here
+							</a>
+							<br>
 							- The method used in this application allows user to input up to 30 failure data. If it exceeds the results will still appear, but will reduce the accuracy of the results. Please use another method to calculate the parameters of the weibull distribution for larger quantities of failure data.
 							<br>
 							<br>
@@ -93,7 +106,7 @@
 					<div class="tab-pane" id="panel-filinput">
 						<p>
 							<br>
-							This section provide input file in .csv extension which contains failure data.
+							This section provide input file in .csv extension which contains failure data. 
 							<br>
 						</p>
 						<form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
