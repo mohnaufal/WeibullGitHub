@@ -70,6 +70,9 @@
 							<br>
 							<br>
 							Terms for input data:<br>
+							- There is two main input for this app, failure data and sample size. <br>
+							- For complete data, failure data size is equal to sample size. Therefore for N you should enter number of your failure data. <br>
+							- For censored data, failure data size should be less than sample size. Therefore for N you should enter number of your sample size. <br>
 							- Input data should not be less than 4  failure data. otherwise this app will not be able to compute the results.<br>
 							- Enter only number for input, if any alphabetical letter this app will not be able to compute the results.<br>
 							- Input data must be sorted from smallest to largest.<br>
@@ -120,14 +123,13 @@
 						</p>
 
 						<div class="form-group">
-							 <label for="exampleInputFile">File input</label>
-							 <input type="file" name= "inputfile" id="exampleInputFile">
-
+						    <form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
+						        <label for="exampleInputFile">File input</label>
+						        <input type="file" name= "inputfile" id="exampleInputFile"><br>
+						        <input class="col-md-5 form-control" name="lengthdata" placeholder="Enter Sample Size"><br>
+						        <button type="submit" class="btn btn-default">Submit</button>
+						    </form>
 						</div>
-						<form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
-						<input class="form-control" name="lengthdata" placeholder="Enter Sample Size">
-						<button type="submit" class="btn btn-default">Submit</button>
-						</form>
 					</div>
 					<div class="tab-pane" id="panel-about">
 						<p>
