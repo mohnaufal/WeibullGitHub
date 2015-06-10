@@ -86,19 +86,28 @@
 					<div class="tab-pane" id="panel-841589">
 						<p>
 							<br>
-							This section provide input form for failure data. Enter failure data and press Submit.
+							This section provide input form for failure data and sample size N. Enter failure data, sample size N and press Submit.
 							<br>
 						</p>
 						<form method = "post" enctype="multipart/form-data" action= "/fitting" target ="_blank">
 							<table border ="1">
 								<thead>
-									<tr>
-										<th>Failure Time</th>
-									</tr>
+									
+									<th>Failure Time</th>
+									<th>N</th>
+									
 								</thead>	
 								<tr>
-									<td><textarea rows ="50" cols = "20" name ="inputdata"></textarea>
-									<button type="submit" class="btn btn-default">Submit</button>
+									
+									<td> 
+										<textarea rows ="50" cols = "20" name ="inputdata"></textarea>
+								    	
+										
+									</td>  
+									<td valign="top">
+								    	<input class="form-control" name="lengthdata" placeholder="Enter Sample Size">
+								    	<button type="submit" class="btn btn-default">Submit</button>
+									</td> 
 								</tr>
 							</table>
 						</form>
@@ -106,15 +115,17 @@
 					<div class="tab-pane" id="panel-filinput">
 						<p>
 							<br>
-							This section provide input file in .csv extension which contains failure data. 
+							This section provide input file in .csv extension which contains failure data. Enter your csv file which contains failure data, N as your sample size and press submit 
 							<br>
 						</p>
-						<form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
 
 						<div class="form-group">
-							 <label for="exampleInputFile">File input</label><input type="file" name= "inputfile" id="exampleInputFile">
+							 <label for="exampleInputFile">File input</label>
+							 <input type="file" name= "inputfile" id="exampleInputFile">
 
 						</div>
+						<form role="form" method="post" enctype= "multipart/form-data" action="/fitting?upload=1" target="_blank">
+						<input class="form-control" name="lengthdata" placeholder="Enter Sample Size">
 						<button type="submit" class="btn btn-default">Submit</button>
 						</form>
 					</div>

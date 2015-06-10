@@ -40,19 +40,26 @@ def plot_pdf(t, loc, scale, shape, output):
     
     y = weib_pdf(t, loc, scale, shape)
     ax.scatter(t, y)
-
-    xt_F = np.logspace(np.ceil(np.log10(loc)), np.ceil(np.log10(t.max())), 100)
+    
+    if ((loc+t.min())/2 > 0):
+        xt_F = np.logspace(np.log10((loc+t.min())/2), np.log10(t.max()*10), 100)
+    else:
+        xt_F = np.logspace(np.log10(t.min()), np.log10(t.max()*10), 100)
     yt_F = weib_pdf(xt_F, loc, scale, shape)
-    ax.set_xscale('log')
-    ax.set_xlim([1, xt_F.max()])
-    ax.set_ylim([0, yt_F.max()])
+    
+    if (np.any(np.isfinite(y))):
+        ax.set_xscale('log')
+    
+    #ax.set_xlim([1, xt_F.max()])
+    ax.set_ylim([0, yt_F.max()*2])
     ax.set_xlabel('Age (T), log scale')
     ax.set_ylabel('Weibull PDF')
     ax.plot(xt_F, yt_F)
     
     plt.grid()
-    ax.set_title("Weibull Probability Density Function", weight='bold')
-    fig.savefig(output, format="png");
+    ax.set_title("Weibull probability density function (pdf)", weight='bold')
+    fig.savefig(output, format="png")
+    plt.close(fig)
     output.seek(0)
     
 
@@ -77,7 +84,8 @@ def plot_linreg(x,y, output, draw_line=False):
     #ax.xaxis.set_major_locator(x_locator)
     ax.set_xlabel('Age (T), log scale')
     ax.set_ylabel('Median Rank, % scale')
-    plt.xlim(1)
+    #ax.set_xlim(left=0)
+    ax.set_ylim([yt_lnF.min(), yt_lnF.max()])
     ax.scatter(x, y)
     if draw_line:
         line = slope*x+intercept
@@ -86,7 +94,8 @@ def plot_linreg(x,y, output, draw_line=False):
     else:
         ax.set_title("Weibull Cumulative Distribution Function", weight='bold')
     plt.grid()
-    fig.savefig(output,format="png");
+    fig.savefig(output,format="png")
+    plt.close(fig)
     output.seek(0)
     #print("R^2: {}".format(r_value**2))
     #print("Shape:{} Scale:{}".format(slope, np.exp(-intercept/slope)))
@@ -101,26 +110,54 @@ def reliability(t, loc, scale, shape):
 def reliable_life(r, loc, scale, shape):
     return (loc + (scale*((-np.log(r))**(1/shape))))
 
-def median_rank(n):
-    return (np.arange(1, n+1)-0.3)/(n+0.4)
+def median_rank(n, N):
+    """
+    n: number of failure
+    N: number of sample (failure + survivor)
+    """
+    return (np.arange(1, n+1)-0.3)/(N+0.4)
 
 #calculate location (t0_hat) by way of Zanakis [1992]
-def p(n):
+def p(n): #p for weibull dist
     return (0.8829*n**(-0.3437))
 
-def t0_hat(x):
-    n = len(x) - 1
-    j = np.ceil(n * p(n)) - 1
+
+def t0_test(t, n):
+    t_complete = t.copy()
+    t_complete.sort()
+    t_fail = t_complete[:n]
+    
+    t0 = (t_fail.min() * t_fail.max() - t_fail**2)/(t_fail.min() + t_fail.max() - 2 * t_fail)
+    return t0
+
+def t0_hat(x, N):
+    n = len(x)
+    j = np.ceil(n * p(n) * n / N)
     t1 = x[0]
-    tn = x[n]
-    tj = x[j]
+    tn = x[n - 1] #python index starts from 1
+    tj = x[j - 1]
 
-    return (t1*tn-tj**2)/(t1 + tn - 2*tj)
+    t0 = (t1*tn-tj**2)/(t1 + tn - 2*tj)
+    
+    """
+    if (t0 > t1):
+        t0 = 2*x[0] - x[1]
+        print("using two order estimator")
+    
+    if (t0 > t1):
+        t0 = t1
+        print("using t1")
+    """
+    
+    return t0
 
-def weibull_scale_transform(data):
+def weibull_scale_transform(data, N):
     x = np.log(data)
-    y = np.log(-np.log(1 - median_rank(len(data))))
+    y = np.log(-np.log(1 - median_rank(len(data), N)))
     return x, y
+
+def weib_ll(t, loc, scale, shape):
+    return np.sum(np.log(weib_pdf(t, loc, scale, shape)))
 
 @route("/relia", method="POST")
 def relia():
@@ -134,8 +171,25 @@ def relia():
         tfail = float(request.forms.get("tfail"))
         content = "{}".format(reliability(tfail, t0, scale, shape))
 
-    
     return content
+
+def try_t0(tfail, N):
+    n = len(tfail)
+    j = np.ceil(n * p(n) * n / N)
+    k = np.ceil(n * p(N))
+    
+    t0 = (tfail.min() * tfail.max() - tfail[j-1:k]**2)/(tfail.min() + tfail.max() - 2 * tfail[j-1:k])
+
+    ll = np.empty(len(t0))
+    for i in range(len(t0)):
+        x, y = weibull_scale_transform(tfail - t0[i], N)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+        shape = slope
+        scale = np.exp(-intercept/slope)
+        ll[i] = weib_ll(tfail, t0[i], scale, shape)
+    print(t0, ll)
+    return t0[ll.argmax()]
+    
 
 @route("/fitting", method='POST')
 def fitting():
@@ -145,19 +199,24 @@ def fitting():
     else:
         input_data = io.StringIO(request.forms.get("inputdata"))
 
+    N = int(request.forms.get("lengthdata"))
     tfail = np.loadtxt(input_data)
-    x1, y1 = weibull_scale_transform(tfail)
-    t0 = t0_hat(tfail)
-    x2, y2 = weibull_scale_transform(tfail - t0)
-
+    tfail.sort()
+    x1, y1 = weibull_scale_transform(tfail, N)
+    #t0 = t0_hat(tfail, N)
+    t0 = try_t0(tfail, N)
+    x2, y2 = weibull_scale_transform(tfail - t0, N)
+    
     output1 = io.BytesIO()
     output2 = io.BytesIO()
     output3 = io.BytesIO()
+    output4 = io.BytesIO()
     
-    shape1, scale1, r_value1 = plot_linreg(x1,y1, output1)
+    shape1, scale1, r_value1 = plot_linreg(x1, y1, output1, draw_line=False)
     #print ("Reliability: {}".format (reliability(tfail, 0, scale1, shape1)))
-    shape2, scale2, r_value2 = plot_linreg(x2,y2, output2, draw_line=True)
-    plot_pdf(tfail, t0, scale2, shape2, output3)
+    shape2, scale2, r_value2 = plot_linreg(x2, y2, output2, draw_line=True)
+    plot_pdf(tfail, t0, scale2, shape2, output3) #pdf of distribution fitted with location
+    plot_pdf(tfail, 0, scale1, shape1, output4) #pdf of dist fitted without location
     r = reliability(tfail, t0, scale2, shape2)
     #print ("Location:{}".format(t0))
     #print ("Reliability: {}".format (reliability(tfail, t0, scale2, shape2)))
@@ -171,21 +230,27 @@ def fitting():
                 <img src="data:image/png;base64,{0}"/>
                 
                 <img src="data:image/png;base64,{6}"/>
+                
             </td>
             <td valign="top" width="43%">
-                R^2 = {2} <br>
-                Shape Parameter = {3} <br>
-                Scale Parameter = {4} <br>
+                R^2 (1) = {2} <br>
+               
+                R^2 (2) = {7} <br>
                 Location Parameter = {5} <br>
+                Shape Parameter = {8} <br>
+                Scale Parameter = {9} <br>
+                
+                Log-Likelihood (1) = {10} <br>
+                Log-Likelihood (2) = {11} <br>                
                 
                 Reliability: <input id ="reliability" name="reliability" type='text' />
-                <input value="Hitung Reliable Life" id= "hitung_reliablelife" type='submit' />
-                <input id="shape" name="shape" value="{3}" type='hidden' />
-                <input  id="scale" name="scale" value="{4}" type='hidden' />
+                <input value="Find Reliable Life" id= "hitung_reliablelife" type='submit' />
+                <input id="shape" name="shape" value="{8}" type='hidden' />
+                <input  id="scale" name="scale" value="{9}" type='hidden' />
                 <input  id="loc" name="loc" value="{5}" type='hidden' />
                 <br>
                 Reliable Life: <input  id="tfail" name="tfail" type='text' />
-                <input value="Hitung Reliability" type='submit' id="hitung_reliability" />
+                <input value="Find Reliability" type='submit' id="hitung_reliability" />
             </td>
         </tr>
     </table>
@@ -196,12 +261,21 @@ def fitting():
     </body>
     </html>""".format(base64.encodebytes(output1.getvalue()).decode(),
             base64.encodebytes(output2.getvalue()).decode(),
+            (r_value1**2),
+            shape1,
+            scale1,
+            t0,
+            base64.encodebytes(output3.getvalue()).decode(),
             (r_value2**2),
             shape2,
             scale2,
-            t0,
-            base64.encodebytes(output3.getvalue()).decode())
-    plt.close()
+            weib_ll(tfail, 0, scale1, shape1),
+            weib_ll(tfail, t0, scale2, shape2),
+            base64.encodebytes(output4.getvalue()).decode())
+    output1.close()
+    output2.close()
+    output3.close()
+    output4.close()
     return html
 
 
@@ -212,6 +286,13 @@ def index():
 @route('/static/:path#.+#', name='static')
 def static(path):
     return static_file(path, root='static')
+
+"""
+<img src="data:image/png;base64,{1}"/>
+<img src="data:image/png;base64,{12}"/>
+ Shape Parameter1 = {3} <br>
+ Scale Parameter1= {4} <br>
+"""
 
 import os
 from bottle import TEMPLATE_PATH
